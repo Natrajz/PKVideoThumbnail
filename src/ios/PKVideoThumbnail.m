@@ -55,11 +55,22 @@
     }
 }
 
+- (NSURL*)getURLFromFilePath:(NSString*)filePath
+{
+    if ([filePath containsString:@"assets-library://"]) {
+        return [NSURL URLWithString:[filePath stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    } else if ([filePath containsString:@"file://"]) {
+        return [NSURL URLWithString:[filePath stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    }
+
+    return [NSURL fileURLWithPath:[filePath stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+}
+
 - (CDVPluginResult *) extractThumbnailAtPath:(NSString *)sourcePath toPath:(NSString *)targetPath withOptions:(NSDictionary *)options
 {
 
     UIImage *thumbnail;
-    NSURL *url = [self obtainURLForPath:sourcePath];
+    NSURL *url = [self getURLFromFilePath:sourcePath];
 
     // from http://stackoverflow.com/q/9145968 by Mx Gherkins
     // and http://www.catehuston.com/blog/2015/07/29/ios-getting-a-thumbnail-for-a-video/
@@ -105,7 +116,7 @@
 
     // if mode is file, we'll write it out to a file as a JPEG
     if ([[[options objectForKey:@"mode"] lowercaseString] isEqualToString:@"file"]) {
-        NSURL *target = [self obtainURLForPath:targetPath];
+        NSURL *target = [self getURLFromFilePath:targetPath];
         if (target) {
             NSString *revisedTargetPath = [target.absoluteString stringByReplacingOccurrencesOfString:@"file://" withString:@""];
             // write out the thumbnail; a return of NO will be a failure.
@@ -166,6 +177,3 @@
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 @end
-
-
-
