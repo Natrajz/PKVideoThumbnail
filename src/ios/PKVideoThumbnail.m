@@ -123,7 +123,7 @@
         if ([[[options objectForKey:@"mode"] lowercaseString] isEqualToString:@"array"]) {
             return [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArrayBuffer:imageData];
         } else {
-            return [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:[@"data:image/jpeg;base64," stringByAppendingString:[imageData base64EncodedStringWithOptions:0]]];
+            return [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:[@"data:image/jpeg;base64," stringByAppendingString:[imageData base64EncodedStringWithOptions: NSDataBase64Encoding64CharacterLineLength]]];
         }
     }
 }
