@@ -75,6 +75,7 @@
     // from http://stackoverflow.com/q/9145968 by Mx Gherkins
     // and http://www.catehuston.com/blog/2015/07/29/ios-getting-a-thumbnail-for-a-video/
 
+/*
     // AVAsset *asset = [AVAsset assetWithURL:url];
     AVURLAsset *asset = [[AVURLAsset alloc] initWithURL:url options:nil];
     // AVAssetImageGenerator *generate = [AVAssetImageGenerator assetImageGeneratorWithAsset:asset];
@@ -90,8 +91,36 @@
     }
     thumbnail = [[UIImage alloc] initWithCGImage:imgRef];
     CGImageRelease(imgRef);
+*/
 
-    if (!thumbnail) {
+
+	AVURLAsset *asset = [[AVURLAsset alloc] initWithURL:url options:nil];
+    NSParameterAssert(asset);
+    AVAssetImageGenerator *assetIG = [[AVAssetImageGenerator alloc] initWithAsset:asset];
+    assetIG.appliesPreferredTrackTransform = YES;
+    assetIG.apertureMode = AVAssetImageGeneratorApertureModeEncodedPixels;
+    
+    CGImageRef thumbnailImageRef = NULL;
+    CFTimeInterval thumbnailImageTime = 1;
+    NSError *igError = nil;
+    thumbnailImageRef = [assetIG copyCGImageAtTime:CMTimeMake(thumbnailImageTime, 60) actualTime:NULL
+                         error:&igError];
+    if (igError) {
+        return [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[NSString stringWithFormat:@"Could not extract thumbnail from %@ at time %f; err=%@", url, igError]];
+    }
+	
+    // if (!thumbnailImageRef){
+		// NSLog(@"thumbnailImageGenerationError %@", igError );
+	// }
+        
+    thumbnail = thumbnailImageRef
+    ? [[UIImage alloc] initWithCGImage:thumbnailImageRef]
+    : nil;
+
+	CGImageRelease(thumbnailImageRef);
+
+    if (!thumbnailImageRef) {
+		NSLog(@"thumbnailImageGenerationError %@", igError );
         return [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[NSString stringWithFormat:@"Didn't get a thumbnail from CGImage using %@", url]];
     }
 
