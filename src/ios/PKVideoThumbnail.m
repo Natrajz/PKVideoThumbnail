@@ -69,8 +69,38 @@
 - (CDVPluginResult *) extractThumbnailAtPath:(NSString *)sourcePath toPath:(NSString *)targetPath withOptions:(NSDictionary *)options
 {
 
-    UIImage *thumbnail;
-    NSURL *url = [self getURLFromFilePath:sourcePath];
+    
+	NSURL *url = [NSURL fileURLWithPath:sourcePath];
+	
+	
+	if ([sourcePath rangeOfString:@"://"].location == NSNotFound)
+    {
+        url = [NSURL URLWithString:[[@"file://localhost" stringByAppendingString:sourcePath] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+    }
+    else
+    {
+        url = [NSURL URLWithString:[sourcePath stringByAddingPercentEscapesUsingEncoding: NSUTF8StringEncoding]];
+    }
+	
+	int32_t preferredTimeScale = 600;
+	float atTime = 2;
+	CMTime time = CMTimeMakeWithSeconds(atTime, preferredTimeScale);
+	AVAsset *asset = [AVAsset assetWithURL:url];
+    AVAssetImageGenerator *imageGenerator = [[AVAssetImageGenerator alloc] initWithAsset:asset];
+    imageGenerator.requestedTimeToleranceAfter = kCMTimeZero; // needed to get a precise time (http://stackoverflow.com/questions/5825990/i-cannot-get-a-precise-cmtime-for-generating-still-image-from-1-8-second-video)
+    imageGenerator.requestedTimeToleranceBefore = kCMTimeZero; // ^^
+    imageGenerator.appliesPreferredTrackTransform = YES; // crucial to have the right orientation for the image (http://stackoverflow.com/questions/9145968/getting-video-snapshot-for-thumbnail)
+    CGImageRef imageRef = [imageGenerator copyCGImageAtTime:time actualTime:NULL error:NULL];
+    UIImage *thumbnail = [UIImage imageWithCGImage:imageRef];
+    CGImageRelease(imageRef);  // CGImageRef won't be released by ARC
+
+
+	if (!thumbnail) {
+        return [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[NSString stringWithFormat:@"Didn't get a thumbnail from CGImage using %@", url]];
+    }
+
+
+    //NSURL *url = [self getURLFromFilePath:sourcePath];
 
     // from http://stackoverflow.com/q/9145968 by Mx Gherkins
     // and http://www.catehuston.com/blog/2015/07/29/ios-getting-a-thumbnail-for-a-video/
@@ -93,7 +123,7 @@
     CGImageRelease(imgRef);
 */
 
-
+/*
 	AVURLAsset *asset = [[AVURLAsset alloc] initWithURL:url options:nil];
     NSParameterAssert(asset);
     AVAssetImageGenerator *assetIG = [[AVAssetImageGenerator alloc] initWithAsset:asset];
@@ -123,8 +153,10 @@
 		NSLog(@"thumbnailImageGenerationError %@", igError );
         return [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[NSString stringWithFormat:@"Didn't get a thumbnail from CGImage using %@", url]];
     }
+	*/
 
     // if we have a thumbnail, we now need to determine if it needs resized...
+	
     NSDictionary *dimensions = [options objectForKey:@"resize"];
     if (dimensions) {
         // from http://nshipster.com/image-resizing/
