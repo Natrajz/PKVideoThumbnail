@@ -75,15 +75,15 @@
     // from http://stackoverflow.com/q/9145968 by Mx Gherkins
     // and http://www.catehuston.com/blog/2015/07/29/ios-getting-a-thumbnail-for-a-video/
 
-    AVAsset *asset = [AVAsset assetWithURL:url];
-    //AVURLAsset *asset = [[AVURLAsset alloc] initWithURL:url options:nil];
-    AVAssetImageGenerator *generate = [AVAssetImageGenerator assetImageGeneratorWithAsset:asset];
-    //AVAssetImageGenerator *generate = [[AVAssetImageGenerator alloc] initWithAsset:asset];
+    // AVAsset *asset = [AVAsset assetWithURL:url];
+    AVURLAsset *asset = [[AVURLAsset alloc] initWithURL:url options:nil];
+    // AVAssetImageGenerator *generate = [AVAssetImageGenerator assetImageGeneratorWithAsset:asset];
+    AVAssetImageGenerator *generate = [[AVAssetImageGenerator alloc] initWithAsset:asset];
     generate.appliesPreferredTrackTransform = YES; // http://stackoverflow.com/a/9146246 by djromero
 
     NSError *err = NULL;
     Float64 position = [[options objectForKey:@"position"] floatValue];
-    CMTime time = CMTimeMakeWithSeconds(position, 1000);
+    CMTime time = CMTimeMake(1, 2);
     CGImageRef imgRef = [generate copyCGImageAtTime:time actualTime:NULL error:&err];
     if (err) {
         return [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[NSString stringWithFormat:@"Could not extract thumbnail from %@ at time %f; err=%@", url, position, err]];
